@@ -73,7 +73,7 @@ else:
         prediction = model.predict(input_scaled)
         
         st.subheader("Hasil Prediksi")
-        if prediction[0] == 1:
+        if prediction[0] == -1:
             st.success("✔️ JINAK (Benign)")
             st.info("Tumor diprediksi bersifat jinak.")
         else:
