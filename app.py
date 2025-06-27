@@ -2,15 +2,33 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
+from scipy.optimize import minimize 
 
 
 class TwinSVM:
-    def __init__(self, C1=1.0, C2=1.0, epsilon=0.1):
-        pass 
-    
-    def predict(self, X):
+
+    def __init__(self, C1=1.0, C2=1.0, gamma=1.0):
+        self.C1, self.C2, self.gamma = C1, C2, gamma
+        self.v1, self.v2 = None, None
+        self.support_vectors_A, self.support_vectors_B = None, None
+        self.fit_successful = False
+
+    def _rbf_kernel(self, X1, X2):
+        if X1.ndim == 1: X1 = X1.reshape(1, -1)
+        if X2.ndim == 1: X2 = X2.reshape(1, -1)
+        dist_sq = np.sum(X1**2, axis=1).reshape(-1, 1) + np.sum(X2**2, axis=1) - 2 * np.dot(X1, X2.T)
+        return np.exp(-self.gamma * dist_sq)
+
+    def fit(self, X, y):
 
         pass
+
+    def predict(self, X):
+
+        if not self.fit_successful: return np.ones(X.shape[0]) * -1
+        dist1 = np.abs(np.hstack([self._rbf_kernel(X, self.support_vectors_A), np.ones((X.shape[0], 1))]) @ self.v1)
+        dist2 = np.abs(np.hstack([self._rbf_kernel(X, self.support_vectors_B), np.ones((X.shape[0], 1))]) @ self.v2)
+        return np.where(dist1 < dist2, 1, -1)
 
 @st.cache_resource
 def load_model_and_scaler():
@@ -20,7 +38,6 @@ def load_model_and_scaler():
         return model, scaler
     except Exception as e:
         st.error(f"Gagal memuat model: {e}")
-        st.error("Pastikan file .pkl ada dan definisi 'class TwinSVM' sudah benar di dalam script ini.")
         return None, None
 
 
@@ -29,13 +46,12 @@ model, scaler = load_model_and_scaler()
 
 st.set_page_config(page_title="Prediksi Kanker Payudara", layout="centered")
 st.title("🔬 Aplikasi Prediksi Kanker Payudara")
-st.markdown("Menggunakan model **TwinSVM** dengan Optimisasi parater menggunakan **Simualated Annealing** untuk klasifikasi tumor Jinak (Benign) atau Ganas (Malignant).")
+st.markdown("Menggunakan model **TwinSVM (Optimized)** untuk klasifikasi tumor Jinak (Benign) atau Ganas (Malignant).")
 
 if model is None or scaler is None:
-    st.error("GAGAL MEMUAT MODEL. Periksa kembali file .pkl dan definisi kelas di script.")
+    st.error("GAGAL MEMUAT MODEL. Pastikan file 'twinsvm_model.pkl' dan 'scaler.pkl' ada di folder yang sama.")
 else:
     st.sidebar.header("Input Fitur Tumor")
-    
     feature_names = [
         'radius_mean', 'texture_mean', 'perimeter_mean', 'area_mean', 'smoothness_mean',
         'compactness_mean', 'concavity_mean', 'concave points_mean', 'symmetry_mean',
@@ -54,7 +70,6 @@ else:
         input_df = pd.DataFrame([input_dict])
         input_scaled = scaler.transform(input_df)
         
-
         prediction = model.predict(input_scaled)
         
         st.subheader("Hasil Prediksi")
