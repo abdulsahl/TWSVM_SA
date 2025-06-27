@@ -46,7 +46,7 @@ model, scaler = load_model_and_scaler()
 
 st.set_page_config(page_title="Prediksi Kanker Payudara", layout="centered")
 st.title("🔬 Aplikasi Prediksi Kanker Payudara")
-st.markdown("Menggunakan model **TwinSVM (Optimized)** untuk klasifikasi tumor Jinak (Benign) atau Ganas (Malignant).")
+st.markdown("Menggunakan model **TwinSVM (Optimized)** dengan Optimisasi parameter **Simulated Annealing** untuk klasifikasi tumor Jinak (Benign) atau Ganas (Malignant).")
 
 if model is None or scaler is None:
     st.error("GAGAL MEMUAT MODEL. Pastikan file 'twinsvm_model.pkl' dan 'scaler.pkl' ada di folder yang sama.")
